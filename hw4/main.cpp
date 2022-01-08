@@ -41,7 +41,7 @@ GLuint vao_e, vao_p;
 GLuint texture_e, texture_p;
 
 float windowSize[2] = { 600, 600 };
-glm::vec3 WorldLightPos = glm::vec3(0, 8, 0);
+glm::vec3 WorldLightPos = glm::vec3(0, 8, 5);
 glm::vec3 WorldCamPos = glm::vec3(0, 2, 7.5);
 
 // feeling free to adjust below value to fit your computer efficacy.
@@ -84,13 +84,10 @@ void shaderInit() {
 	// create your shader in here
 	// below two shader "expand3" & "expand4" only differ in "input type of primitive" of geometry shader (one for triangle , one for quad)
 	// what kind of primitive is sent to geometry shader is depend on what model you call in "glDrawArrays" function
-	GLuint vert = createShader("Shaders/model.vert", "vertex");
+	GLuint vert = createShader("Shaders/toon.vert", "vertex");
 	// GLuint goem = createShader("Shaders/model.geom", "geometry");
-	GLuint frag = createShader("Shaders/model.frag", "fragment");
+	GLuint frag = createShader("Shaders/toon.frag", "fragment");
 	program = createProgram(vert, 0, frag);
-	// remeber to use program before passing value to uniformal variable
-	// glUseProgram(program);
-	// glUseProgram(0);
 }
 
 void bufferModel(Object* model, GLuint* vao) {
@@ -213,14 +210,16 @@ void DrawModel(Object* model, GLuint program, GLuint vao, GLuint texture_ID, glm
 	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &M[0][0]);
 
 	glm::mat4 V = getV();
-	ModelMatrixID = glGetUniformLocation(program, "V");
-	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &V[0][0]);
+	GLuint ViewMatrixID = glGetUniformLocation(program, "V");
+	glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &V[0][0]);
 
 	glm::mat4 P = getP();
 	ModelMatrixID = glGetUniformLocation(program, "P");
 	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &P[0][0]);
 
 	glUniform1i(glGetUniformLocation(program, "texture"), texture_ID);
+
+	glUniform3f(glGetUniformLocation(program, "WorldLightPos"), WorldLightPos.x, WorldLightPos.y, WorldLightPos.z);
 
 	glBindVertexArray(vao);
 	glDrawArrays(DrawingMode, 0, model->positions.size() / 3);
