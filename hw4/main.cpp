@@ -82,22 +82,27 @@ float scene_angle = 0.0f;
 float pikachu_height = 0.0f, pikachu_speed = 0.0f;
 float eevee_height = 0.0f, eevee_speed = 0.0f;
 bool pikachu_glow = false;
+float pikachu_angle = 0.0f;
 
 float gravity = -0.01f;
 
 void keyboard(unsigned char key, int x, int y) {
 	switch(key) {
+	// inspect mode
 	case 'i':
 		inspect_mode = !inspect_mode;
 		cout << "Inspect Mode: " << (inspect_mode ? "On" : "Off") << endl;
 		break;
 
-	// scene rotation
+	// rotation
 	case 's':
-		updateAngle(scene_angle, 10.0f, "scene angle");
+		updateAngle(scene_angle, 10.0f, "scene");
 		break;
 	case 'S':
-		updateAngle(scene_angle, -10.0f, "scene angle");
+		updateAngle(scene_angle, -10.0f, "scene");
+		break;
+	case 'P':
+		updateAngle(pikachu_angle, 10.0f, "pikachu");
 		break;
 
 	// jump
@@ -115,14 +120,14 @@ void keyboard(unsigned char key, int x, int y) {
 	}
 }
 
-void updateAngle(float& angle, float delta_angle, string angle_name) {
+void updateAngle(float& angle, float delta_angle, string prefix) {
 	angle += delta_angle;
 	if (angle >= 360.0f)
 		angle -= 360.0f;
 	else if (angle < 0.0f)
 		angle += 360.0f;
 	if (inspect_mode)
-		cout << angle_name << ": " << angle << endl;
+		cout << prefix << " angle: " << angle << endl;
 }
 
 void shaderInit() {
@@ -342,5 +347,6 @@ void demo() {
 	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
 	M = glm::translate(M, glm::vec3(0, -0.05 + pikachu_height, -1));
+	M = glm::rotate(M, glm::radians(pikachu_angle), glm::vec3(0, 1, 0));
 	DrawModel(Pikachu, program, vao_p, texture_p, M, GL_TRIANGLES);
 }
