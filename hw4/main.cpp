@@ -34,6 +34,7 @@ void LoadTexture(const char* tFileName, GLuint* texture_id);
 void Sleep(int ms);
 glm::mat4 getV();
 glm::mat4 getP();
+void calculatePhysics();
 void demo();
 
 GLuint program;
@@ -76,9 +77,14 @@ int main(int argc, char** argv) {
 
 //control parameter
 float scene_angle = 0.0f;
+float pikachu_height = 0.0f, pikachu_speed = 0.0f;
+float eevee_height = 0.0f, eevee_speed = 0.0f;
+
+float gravity = -0.01f;
 
 void keyboard(unsigned char key, int x, int y) {
 	switch(key) {
+	// scene rotation
 	case 's':
 		scene_angle += 10.0f;
 		if (scene_angle == 360.0f)
@@ -90,6 +96,14 @@ void keyboard(unsigned char key, int x, int y) {
 		if (scene_angle == -10.0f)
 			scene_angle = 350.0f;
 		std::cout << "scene angle: " << scene_angle << std::endl;
+		break;
+
+	// jump
+	case 'p':
+		pikachu_speed = 0.1f;
+		break;
+	case 'e':
+		eevee_speed = 0.1f;
 		break;
 	}
 }
@@ -176,6 +190,7 @@ void display() {
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	calculatePhysics();
 	demo();
 	End = clock();
 	glutSwapBuffers();
@@ -261,6 +276,21 @@ glm::mat4 getP() {
 	return glm::perspective(glm::radians(fov), aspect, nearDistance, farDistance);
 }
 
+void calculatePhysics() {
+	if (pikachu_speed > 0.0f || pikachu_height > 0.0f) {
+		pikachu_height += pikachu_speed;
+		pikachu_speed += gravity;
+	} else if (pikachu_speed < 0.0f && pikachu_height == 0.0f) {
+		pikachu_speed = 0.0f;
+	}
+	if (eevee_speed > 0.0f || eevee_height > 0.0f) {
+		eevee_height += eevee_speed;
+		eevee_speed += gravity;
+	} else if (eevee_speed < 0.0f && eevee_height == 0.0f) {
+		eevee_speed = 0.0f;
+	}
+}
+
 // ### hint
 // Don't be afraid of this hw. It looks like a lot of code because I need to make sure tha all effect (3 kind of shader) can show with two model in different drawing way .
 // You can just focus on one of effect(specifically reading expand.geom & knowing how it works ) to write your shader and create the effect you want to be displaied on video. 
@@ -273,12 +303,12 @@ void demo() {
 	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
-	M = glm::translate(M, glm::vec3(0, -15, 0));
+	M = glm::translate(M, glm::vec3(0, -15, -eevee_height * 20));
 	DrawModel(Eevee, program, vao_e, texture_e, M, GL_TRIANGLES);
 
 	M = glm::mat4(M_base);
 	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
-	M = glm::translate(M, glm::vec3(0, -0.05, -1));
+	M = glm::translate(M, glm::vec3(0, -0.05 + pikachu_height, -1));
 	DrawModel(Pikachu, program, vao_p, texture_p, M, GL_TRIANGLES);
 }
