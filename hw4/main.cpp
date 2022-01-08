@@ -75,8 +75,23 @@ int main(int argc, char** argv) {
 // comment or delete the "demo" function & feel free to chage the content of keyboard function & control parameter
 
 //control parameter
+float scene_angle = 0.0f;
 
 void keyboard(unsigned char key, int x, int y) {
+	switch(key) {
+	case 's':
+		scene_angle += 10.0f;
+		if (scene_angle == 360.0f)
+			scene_angle = 0.0f;
+		std::cout << "scene angle: " << scene_angle << std::endl;
+		break;
+	case 'S':
+		scene_angle -= 10.0f;
+		if (scene_angle == -10.0f)
+			scene_angle = 350.0f;
+		std::cout << "scene angle: " << scene_angle << std::endl;
+		break;
+	}
 }
 
 void shaderInit() {
@@ -251,16 +266,19 @@ glm::mat4 getP() {
 // You can just focus on one of effect(specifically reading expand.geom & knowing how it works ) to write your shader and create the effect you want to be displaied on video. 
 // Reminding again : Eevee model & Umbreon model are composed of different polygon . (Don't forget Pikachu which is also provided in this homework. you can ues it.)
 void demo() {
-	glm::mat4 M(1.0f);
+	glm::mat4 M_base(1.0f);
+	M_base = glm::rotate(M_base, glm::radians(scene_angle), glm::vec3(0, 1, 0));
+
+	glm::mat4 M(M_base);
 	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
 	M = glm::translate(M, glm::vec3(0, -15, 0));
 	DrawModel(Eevee, program, vao_e, texture_e, M, GL_TRIANGLES);
 
-	M = glm::mat4(1.0f);
+	M = glm::mat4(M_base);
 	M = glm::scale(M, glm::vec3(2, 2, 2));
-	M = glm::rotate(M, glm::radians(95.0f), glm::vec3(0, 1, 0));
+	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
 	M = glm::translate(M, glm::vec3(0, -0.05, -1));
 	DrawModel(Pikachu, program, vao_p, texture_p, M, GL_TRIANGLES);
 }
