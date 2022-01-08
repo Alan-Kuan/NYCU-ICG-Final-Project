@@ -21,6 +21,7 @@
 
 using namespace std;
 
+void updateAngle(float& angle, float delta_angle, string angle_name);
 void keyboard(unsigned char key, int x, int y);
 void shaderInit();
 void bufferModel(Object* model, GLuint* vao);
@@ -76,6 +77,7 @@ int main(int argc, char** argv) {
 // comment or delete the "demo" function & feel free to chage the content of keyboard function & control parameter
 
 //control parameter
+bool inspect_mode = false;
 float scene_angle = 0.0f;
 float pikachu_height = 0.0f, pikachu_speed = 0.0f;
 float eevee_height = 0.0f, eevee_speed = 0.0f;
@@ -85,18 +87,17 @@ float gravity = -0.01f;
 
 void keyboard(unsigned char key, int x, int y) {
 	switch(key) {
+	case 'i':
+		inspect_mode = !inspect_mode;
+		cout << "Inspect Mode: " << (inspect_mode ? "On" : "Off") << endl;
+		break;
+
 	// scene rotation
 	case 's':
-		scene_angle += 10.0f;
-		if (scene_angle == 360.0f)
-			scene_angle = 0.0f;
-		std::cout << "scene angle: " << scene_angle << std::endl;
+		updateAngle(scene_angle, 10.0f, "scene angle");
 		break;
 	case 'S':
-		scene_angle -= 10.0f;
-		if (scene_angle == -10.0f)
-			scene_angle = 350.0f;
-		std::cout << "scene angle: " << scene_angle << std::endl;
+		updateAngle(scene_angle, -10.0f, "scene angle");
 		break;
 
 	// jump
@@ -112,6 +113,16 @@ void keyboard(unsigned char key, int x, int y) {
 		pikachu_glow = !pikachu_glow;
 		break;
 	}
+}
+
+void updateAngle(float& angle, float delta_angle, string angle_name) {
+	angle += delta_angle;
+	if (angle >= 360.0f)
+		angle -= 360.0f;
+	else if (angle < 0.0f)
+		angle += 360.0f;
+	if (inspect_mode)
+		cout << angle_name << ": " << angle << endl;
 }
 
 void shaderInit() {
@@ -292,19 +303,22 @@ glm::mat4 getP() {
 	return glm::perspective(glm::radians(fov), aspect, nearDistance, farDistance);
 }
 
+void applyGravity(float& speed, float& height, string prefix) {
+	if (speed > 0.0f || height > 0.0f) {
+		height += speed;
+		speed += gravity;
+		if (inspect_mode) {
+			cout << prefix << " speed: " << speed << endl;
+			cout << prefix << " height: " << height << endl;
+		}
+	} else if (speed < 0.0f && height == 0.0f) {
+		speed = 0.0f;
+	}
+}
+
 void calculatePhysics() {
-	if (pikachu_speed > 0.0f || pikachu_height > 0.0f) {
-		pikachu_height += pikachu_speed;
-		pikachu_speed += gravity;
-	} else if (pikachu_speed < 0.0f && pikachu_height == 0.0f) {
-		pikachu_speed = 0.0f;
-	}
-	if (eevee_speed > 0.0f || eevee_height > 0.0f) {
-		eevee_height += eevee_speed;
-		eevee_speed += gravity;
-	} else if (eevee_speed < 0.0f && eevee_height == 0.0f) {
-		eevee_speed = 0.0f;
-	}
+	applyGravity(pikachu_speed, pikachu_height, "pikachu");
+	applyGravity(eevee_speed, eevee_height, "eevee");
 }
 
 // ### hint
