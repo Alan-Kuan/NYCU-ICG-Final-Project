@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
 float scene_angle = 0.0f;
 float pikachu_height = 0.0f, pikachu_speed = 0.0f;
 float eevee_height = 0.0f, eevee_speed = 0.0f;
+bool pikachu_glow = false;
 
 float gravity = -0.01f;
 
@@ -104,6 +105,11 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'e':
 		eevee_speed = 0.1f;
+		break;
+
+	// edge glow
+	case 'g':
+		pikachu_glow = !pikachu_glow;
 		break;
 	}
 }
@@ -234,22 +240,32 @@ void idle() {
 }
 
 void DrawModel(Object* model, GLuint program, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
+	static GLuint _location;
+
 	glUseProgram(program);
 
-	GLuint ModelMatrixID = glGetUniformLocation(program, "M");
-	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &M[0][0]);
+	_location = glGetUniformLocation(program, "M");
+	glUniformMatrix4fv(_location, 1, GL_FALSE, &M[0][0]);
 
 	glm::mat4 V = getV();
-	GLuint ViewMatrixID = glGetUniformLocation(program, "V");
-	glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &V[0][0]);
+	_location = glGetUniformLocation(program, "V");
+	glUniformMatrix4fv(_location, 1, GL_FALSE, &V[0][0]);
 
 	glm::mat4 P = getP();
-	ModelMatrixID = glGetUniformLocation(program, "P");
-	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &P[0][0]);
+	_location = glGetUniformLocation(program, "P");
+	glUniformMatrix4fv(_location, 1, GL_FALSE, &P[0][0]);
 
-	glUniform1i(glGetUniformLocation(program, "texture"), texture_ID);
+	_location = glGetUniformLocation(program, "texture");
+	glUniform1i(_location, texture_ID);
 
-	glUniform3f(glGetUniformLocation(program, "WorldLightPos"), WorldLightPos.x, WorldLightPos.y, WorldLightPos.z);
+	_location = glGetUniformLocation(program, "WorldLightPos");
+	glUniform3f(_location, WorldLightPos.x, WorldLightPos.y, WorldLightPos.z);
+
+	_location = glGetUniformLocation(program, "WorldCamPos");
+	glUniform3f(_location, WorldCamPos.x, WorldCamPos.y, WorldCamPos.z);
+
+	_location = glGetUniformLocation(program, "edge_glow");
+	glUniform1i(_location, model == Pikachu && pikachu_glow);
 
 	glBindVertexArray(vao);
 	glDrawArrays(DrawingMode, 0, model->positions.size() / 3);
@@ -299,14 +315,14 @@ void demo() {
 	glm::mat4 M_base(1.0f);
 	M_base = glm::rotate(M_base, glm::radians(scene_angle), glm::vec3(0, 1, 0));
 
-	glm::mat4 M(M_base);
+	glm::mat4 M = M_base;
 	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
 	M = glm::translate(M, glm::vec3(0, -15, -eevee_height * 20));
 	DrawModel(Eevee, program, vao_e, texture_e, M, GL_TRIANGLES);
 
-	M = glm::mat4(M_base);
+	M = M_base;
 	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
 	M = glm::translate(M, glm::vec3(0, -0.05 + pikachu_height, -1));
