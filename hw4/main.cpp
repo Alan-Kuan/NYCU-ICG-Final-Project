@@ -303,22 +303,24 @@ glm::mat4 getP() {
 	return glm::perspective(glm::radians(fov), aspect, nearDistance, farDistance);
 }
 
-void applyGravity(float& speed, float& height, string prefix) {
-	if (speed > 0.0f || height > 0.0f) {
+void applyGravity(float& height, float& speed, string prefix) {
+	if (speed != 0.0f) {
 		height += speed;
 		speed += gravity;
-		if (inspect_mode) {
-			cout << prefix << " speed: " << speed << endl;
-			cout << prefix << " height: " << height << endl;
+		if (height <= 1.0e-3f) {
+			height = 0.0f;
+			speed = 0.0f;
 		}
-	} else if (speed < 0.0f && height == 0.0f) {
-		speed = 0.0f;
+		if (inspect_mode) {
+			cout << prefix << " height: " << height << endl;
+			cout << prefix << " speed: " << speed << endl;
+		}
 	}
 }
 
 void calculatePhysics() {
-	applyGravity(pikachu_speed, pikachu_height, "pikachu");
-	applyGravity(eevee_speed, eevee_height, "eevee");
+	applyGravity(pikachu_height, pikachu_speed, "pikachu");
+	applyGravity(eevee_height, eevee_speed, "eevee");
 }
 
 // ### hint
