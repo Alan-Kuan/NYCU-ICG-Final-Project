@@ -97,6 +97,9 @@ float pikachu_angle = 0.0f;
 bool expand = false;
 float pokeball_h_angle = 0.0f;
 float pokeball_v_angle = 0.0f;
+float pokeball_y_speed = 0.0f;
+float pokeball_x_speed = 0.0f;
+float pokeball_x = 0.0f, pokeball_y = 0.0f;
 
 float gravity = -0.01f;
 
@@ -141,6 +144,16 @@ void keyboard(unsigned char key, int x, int y) {
 	// expansion
 	case 'E':
 		expand = !expand;
+		break;
+
+	// projectile motion
+	case 'a':
+		pokeball_x_speed = -0.1f;
+		pokeball_y_speed = 0.1f;
+		break;
+	case 'd':
+		pokeball_x_speed = 0.1f;
+		pokeball_y_speed = 0.1f;
 		break;
 	}
 }
@@ -409,9 +422,21 @@ void applyGravity(float& height, float& speed, string prefix) {
 	}
 }
 
+void applyHorizontalSpeed(float& x, const float y, float& speed, string prefix) {
+	if (speed != 0.0f) {
+		x += speed;
+		if (y <= 1.03e-3f)
+			speed = 0.0f;
+		if (inspect_mode)
+			cout << prefix << " speed: " << speed << endl;
+	}
+}
+
 void calculatePhysics() {
 	applyGravity(pikachu_height, pikachu_speed, "pikachu");
 	applyGravity(eevee_height, eevee_speed, "eevee");
+	applyGravity(pokeball_y, pokeball_y_speed, "pokeball y");
+	applyHorizontalSpeed(pokeball_x, pokeball_y, pokeball_x_speed, "pokeball x");
 }
 
 // ### hint
@@ -454,7 +479,7 @@ void demo() {
 
 	// draw Pokeball
 	M = M_base;
-	M = glm::translate(M, glm::vec3(0, 1, 0));
+	M = glm::translate(M, glm::vec3(-1 + pokeball_x, 1.5 + pokeball_y, 0));
 	M = glm::rotate(M, glm::radians(pokeball_h_angle), glm::vec3(0, 1, 0));
 	M = glm::rotate(M, glm::radians(pokeball_v_angle), glm::vec3(0, 0, 1));
 	DrawModel(POKEBALL, Pokeball.size(), toon_program, vao_b, texture_b, M, GL_TRIANGLE_STRIP);
