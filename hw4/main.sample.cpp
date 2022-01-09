@@ -148,9 +148,9 @@ void shaderInit() {
 	// create your shader in here
 	// below two shader "expand3" & "expand4" only differ in "input type of primitive" of geometry shader (one for triangle , one for quad)
 	// what kind of primitive is sent to geometry shader is depend on what model you call in "glDrawArrays" function
-	GLuint vert = createShader("Shaders/expand4.vert", "vertex");
-	GLuint goem = createShader("Shaders/expand4.geom", "geometry");
-	GLuint frag = createShader("Shaders/expand4.frag", "fragment");
+	GLuint vert = createShader("Shaders.samples/expand4.vert", "vertex");
+	GLuint goem = createShader("Shaders.samples/expand4.geom", "geometry");
+	GLuint frag = createShader("Shaders.samples/expand4.frag", "fragment");
 	Frag4program = createProgram(vert, goem, frag);
 	Erect4program = createProgram(vert, goem, frag);
 	// remeber to use program before passing value to uniformal variable
@@ -160,9 +160,9 @@ void shaderInit() {
 		glUniform1i(vecID, false);
 	glUseProgram(0);
 
-	vert = createShader("Shaders/expand3.vert", "vertex");
-	goem = createShader("Shaders/expand3.geom", "geometry");
-	frag = createShader("Shaders/expand3.frag", "fragment");
+	vert = createShader("Shaders.samples/expand3.vert", "vertex");
+	goem = createShader("Shaders.samples/expand3.geom", "geometry");
+	frag = createShader("Shaders.samples/expand3.frag", "fragment");
 	Frag3program = createProgram(vert, goem, frag);
 	Erect3program = createProgram(vert, goem, frag);
 	glUseProgram(Erect3program);
@@ -170,12 +170,12 @@ void shaderInit() {
 		glUniform1i(vecID, false);
 	glUseProgram(0);
 
-	vert = createShader("Shaders/dissolve.vert", "vertex");
-	frag = createShader("Shaders/dissolve.frag", "fragment");
+	vert = createShader("Shaders.samples/dissolve.vert", "vertex");
+	frag = createShader("Shaders.samples/dissolve.frag", "fragment");
 	Dissolveprogram = createProgram(vert, 0, frag);
 
-	vert = createShader("Shaders/model.vert", "vertex");
-	frag = createShader("Shaders/model.frag", "fragment");
+	vert = createShader("Shaders.samples/model.vert", "vertex");
+	frag = createShader("Shaders.samples/model.frag", "fragment");
 	Modelprogram = createProgram(vert, frag);
 
 }

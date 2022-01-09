@@ -38,7 +38,7 @@ glm::mat4 getP();
 void calculatePhysics();
 void demo();
 
-GLuint program;
+GLuint toon_program, expand_program;
 GLuint vao_e, vao_p;
 GLuint texture_e, texture_p;
 
@@ -83,6 +83,7 @@ float pikachu_height = 0.0f, pikachu_speed = 0.0f;
 float eevee_height = 0.0f, eevee_speed = 0.0f;
 bool pikachu_glow = false;
 float pikachu_angle = 0.0f;
+bool expand = false;
 
 float gravity = -0.01f;
 
@@ -117,6 +118,11 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'g':
 		pikachu_glow = !pikachu_glow;
 		break;
+
+	// expansion
+	case 'E':
+		expand = !expand;
+		break;
 	}
 }
 
@@ -135,10 +141,16 @@ void shaderInit() {
 	// create your shader in here
 	// below two shader "expand3" & "expand4" only differ in "input type of primitive" of geometry shader (one for triangle , one for quad)
 	// what kind of primitive is sent to geometry shader is depend on what model you call in "glDrawArrays" function
-	GLuint vert = createShader("Shaders/toon.vert", "vertex");
-	// GLuint goem = createShader("Shaders/model.geom", "geometry");
-	GLuint frag = createShader("Shaders/toon.frag", "fragment");
-	program = createProgram(vert, 0, frag);
+	GLuint _vert, _geom, _frag;
+
+	_vert = createShader("Shaders/toon.vert", "vertex");
+	_frag = createShader("Shaders/toon.frag", "fragment");
+	toon_program = createProgram(_vert, 0, _frag);
+
+	_vert = createShader("Shaders/expand.vert", "vertex");
+	_geom = createShader("Shaders/expand.geom", "geometry");
+	_frag = createShader("Shaders/toon.frag", "fragment");
+	expand_program = createProgram(_vert, _geom, _frag);
 }
 
 void bufferModel(Object* model, GLuint* vao) {
@@ -333,20 +345,36 @@ void calculatePhysics() {
 // You can just focus on one of effect(specifically reading expand.geom & knowing how it works ) to write your shader and create the effect you want to be displaied on video. 
 // Reminding again : Eevee model & Umbreon model are composed of different polygon . (Don't forget Pikachu which is also provided in this homework. you can ues it.)
 void demo() {
+	GLuint program = expand ? expand_program : toon_program;
+
 	glm::mat4 M_base(1.0f);
 	M_base = glm::rotate(M_base, glm::radians(scene_angle), glm::vec3(0, 1, 0));
 
+	// draw Eevee
 	glm::mat4 M = M_base;
 	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
 	M = glm::translate(M, glm::vec3(0, -15, -eevee_height * 20));
+	if (expand) {
+		glUseProgram(program);
+		GLuint location = glGetUniformLocation(program, "ratio");
+		glUniform1f(location, 2.0f);
+		glUseProgram(0);
+	}
 	DrawModel(Eevee, program, vao_e, texture_e, M, GL_TRIANGLES);
 
+	// draw Pikachu
 	M = M_base;
 	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
 	M = glm::translate(M, glm::vec3(0, -0.05 + pikachu_height, -1));
 	M = glm::rotate(M, glm::radians(pikachu_angle), glm::vec3(0, 1, 0));
+	if (expand) {
+		glUseProgram(program);
+		GLuint location = glGetUniformLocation(program, "ratio");
+		glUniform1f(location, 0.1f);
+		glUseProgram(0);
+	}
 	DrawModel(Pikachu, program, vao_p, texture_p, M, GL_TRIANGLES);
 }

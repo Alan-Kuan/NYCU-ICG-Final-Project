@@ -11,8 +11,8 @@ out vec4 normal;
 out vec4 worldPos;
 
 void main() {
-  uv = texcoord;
-  normal = M * vec4(in_normal, 0.0);
-  worldPos = M * vec4(in_position, 1.0);
-  gl_Position = P * V * worldPos;
+    uv = texcoord;
+    normal = M * vec4(in_normal, 0.0);
+    worldPos = M * vec4(in_position, 1.0);
+    gl_Position = P * V * worldPos;
 }
