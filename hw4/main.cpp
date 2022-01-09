@@ -1,4 +1,5 @@
 #define GLM_ENABLE_EXPERIMENTAL
+#define _USE_MATH_DEFINES
 
 #include "Object.h"
 #include "FreeImage.h"
@@ -21,16 +22,24 @@
 
 using namespace std;
 
+enum ModelType {
+	PIKACHU,
+	EEVEE,
+	POKEBALL
+};
+
 void updateAngle(float& angle, float delta_angle, string angle_name);
 void keyboard(unsigned char key, int x, int y);
 void shaderInit();
+void generateVAO(vector<VertexAttribute>& data, GLuint* vao);
 void bufferModel(Object* model, GLuint* vao);
 void bindbufferInit();
 void textureInit();
 void display();
 void idle();
 void reshape(GLsizei w, GLsizei h);
-void DrawModel(Object* model,GLuint program, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
+void DrawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack);
+void DrawModel(ModelType model_type, GLsizei vertex_num,GLuint program, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
 void LoadTexture(const char* tFileName, GLuint* texture_id);
 void Sleep(int ms);
 glm::mat4 getV();
@@ -39,8 +48,8 @@ void calculatePhysics();
 void demo();
 
 GLuint toon_program, expand_program;
-GLuint vao_e, vao_p;
-GLuint texture_e, texture_p;
+GLuint vao_e, vao_p, vao_b;
+GLuint texture_e, texture_p, texture_b;
 
 float windowSize[2] = { 600, 600 };
 glm::vec3 WorldLightPos = glm::vec3(0, 8, 5);
@@ -51,6 +60,7 @@ glm::vec3 WorldCamPos = glm::vec3(0, 2, 7.5);
 // timer for FPS control
 clock_t Start, End;
 
+vector<VertexAttribute> Pokeball;
 Object* Pikachu = new Object("Pikachu.obj");
 Object* Eevee = new Object("Eevee.obj");
 
@@ -60,6 +70,7 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutCreateWindow("hw4");
 
+	DrawSphere(Pokeball, 0.3, 60, 30);
 	glewInit();
 	shaderInit();
 	bindbufferInit();
@@ -153,28 +164,7 @@ void shaderInit() {
 	expand_program = createProgram(_vert, _geom, _frag);
 }
 
-void bufferModel(Object* model, GLuint* vao) {
-	vector<VertexAttribute> data;
-	VertexAttribute temp;
-	model->max_y = INT_MIN;
-	model->min_y = INT_MAX;
-	model->max_z = INT_MIN;
-	model->min_z = INT_MAX;
-	for (int i = 0; i < model->positions.size() / 3; i++) {
-		int idx = i * 3;
-		Vertex pos(model->positions[idx], model->positions[idx + 1], model->positions[idx + 2]);
-		temp.setPosition(pos);
-		Vertex norm(model->normals[idx], model->normals[idx + 1], model->normals[idx + 2]);
-		temp.setNormal(norm);
-		idx = i * 2;
-		temp.setTexcoord(model->texcoords[idx], model->texcoords[idx + 1]);
-		data.push_back(temp);
-		model->max_y = max(model->max_y, model->positions[idx + 1]);
-		model->min_y = min(model->min_y, model->positions[idx + 1]);
-		model->max_z = max(model->max_z, model->positions[idx + 2]);
-		model->min_z = min(model->min_z, model->positions[idx + 2]);
-	}
-
+void generateVAO(vector<VertexAttribute>& data, GLuint* vao) {
 	GLuint _vbo;
 	glGenVertexArrays(1, vao);
 	glGenBuffers(1, &_vbo);
@@ -196,6 +186,30 @@ void bufferModel(Object* model, GLuint* vao) {
 	glBindVertexArray(0);
 }
 
+void bufferModel(Object* model, GLuint* vao) {
+	vector<VertexAttribute> data;
+	VertexAttribute temp;
+	model->max_y = INT_MIN;
+	model->min_y = INT_MAX;
+	model->max_z = INT_MIN;
+	model->min_z = INT_MAX;
+	for (int i = 0; i < model->positions.size() / 3; i++) {
+		int idx = i * 3;
+		Vertex pos(model->positions[idx], model->positions[idx + 1], model->positions[idx + 2]);
+		temp.setPosition(pos);
+		Vertex norm(model->normals[idx], model->normals[idx + 1], model->normals[idx + 2]);
+		temp.setNormal(norm);
+		idx = i * 2;
+		temp.setTexcoord(model->texcoords[idx], model->texcoords[idx + 1]);
+		data.push_back(temp);
+		model->max_y = max(model->max_y, model->positions[idx + 1]);
+		model->min_y = min(model->min_y, model->positions[idx + 1]);
+		model->max_z = max(model->max_z, model->positions[idx + 2]);
+		model->min_z = min(model->min_z, model->positions[idx + 2]);
+	}
+	generateVAO(data, vao);
+}
+
 // ### hint
 // load any object model you want with texture below
 // be careful of some obect model may need ".mtl file" which file name shouldn't be changed and the size of model & model's default orientaion may be different.
@@ -204,12 +218,14 @@ void bufferModel(Object* model, GLuint* vao) {
 void bindbufferInit() {
 	bufferModel(Eevee, &vao_e);
 	bufferModel(Pikachu, &vao_p);
+	generateVAO(Pokeball, &vao_b);
 }
 
 void textureInit() {
 	glEnable(GL_TEXTURE_2D);
 	LoadTexture("Eevee.jpg", &texture_e);
 	LoadTexture("Pikachu.png", &texture_p);
+	LoadTexture("Pokeball.png", &texture_b);
 }
 
 void display() {
@@ -267,7 +283,57 @@ void idle() {
 	glutPostRedisplay();
 }
 
-void DrawModel(Object* model, GLuint program, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
+void DrawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack) {
+	float theta, phi, xy_step = 360 / slice, z_step = 180 / stack;
+	Vertex vert;
+	float u, v;
+	for (phi = -90; phi <= 90; phi += z_step) {
+		VertexAttribute temp;
+		for (theta = 0; theta <= 360; theta += xy_step) {
+			vert.x = radius * sin(theta * M_PI / 180) * cos(phi * M_PI / 180);
+			vert.y = radius * cos(theta * M_PI / 180) * cos(phi * M_PI / 180);
+			vert.z = radius * sin(phi * M_PI / 180);
+			temp.setPosition(vert);
+
+			temp.setNormal(vert);
+
+			if (vert.z >= 0) {
+				u = (vert.x + radius) / (4 * radius) + 0.25;
+				v = (vert.y + radius) / (2 * radius);
+			} else if (vert.x >= 0) {
+				u = (vert.x - radius) * 0.25 / -radius + 0.75;
+				v = (vert.y + radius) / (2 * radius);
+			} else {
+				u = vert.x * 0.25 / -radius;
+				v = (vert.y + radius) / (2 * radius);
+			}
+			temp.setTexcoord(u, v);
+			ball.push_back(temp);
+
+			vert.x = radius * sin(theta * M_PI / 180) * cos((phi + z_step) * M_PI / 180);
+			vert.y = radius * cos(theta * M_PI / 180) * cos((phi + z_step) * M_PI / 180);
+			vert.z = radius * sin((phi + z_step) * M_PI / 180);
+			temp.setPosition(vert);
+
+			temp.setNormal(vert);
+
+			if (vert.z >= 0) {
+				u = (vert.x + radius) / (4 * radius) + 0.25;
+				v = (vert.y + radius) / (2 * radius);
+			} else if (vert.x >= 0) {
+				u = (vert.x - radius) * 0.25 / -radius + 0.75;
+				v = (vert.y + radius) / (2 * radius);
+			} else {
+				u = vert.x * 0.25 / -radius;
+				v = (vert.y + radius) / (2 * radius);
+			}
+			temp.setTexcoord(u, v);
+			ball.push_back(temp);
+		}
+	}
+}
+
+void DrawModel(ModelType model_type, GLsizei vertex_num, GLuint program, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
 	static GLuint _location;
 
 	glUseProgram(program);
@@ -293,10 +359,10 @@ void DrawModel(Object* model, GLuint program, GLuint vao, GLuint texture_ID, glm
 	glUniform3f(_location, WorldCamPos.x, WorldCamPos.y, WorldCamPos.z);
 
 	_location = glGetUniformLocation(program, "edge_glow");
-	glUniform1i(_location, model == Pikachu && pikachu_glow);
+	glUniform1i(_location, model_type == PIKACHU && pikachu_glow);
 
 	glBindVertexArray(vao);
-	glDrawArrays(DrawingMode, 0, model->positions.size() / 3);
+	glDrawArrays(DrawingMode, 0, vertex_num);
 	glBindVertexArray(0);
 	glActiveTexture(0);
 	glUseProgram(0);
@@ -362,7 +428,7 @@ void demo() {
 		glUniform1f(location, 2.0f);
 		glUseProgram(0);
 	}
-	DrawModel(Eevee, program, vao_e, texture_e, M, GL_TRIANGLES);
+	DrawModel(EEVEE, Eevee->positions.size() / 3 , program, vao_e, texture_e, M, GL_TRIANGLES);
 
 	// draw Pikachu
 	M = M_base;
@@ -376,5 +442,10 @@ void demo() {
 		glUniform1f(location, 0.1f);
 		glUseProgram(0);
 	}
-	DrawModel(Pikachu, program, vao_p, texture_p, M, GL_TRIANGLES);
+	DrawModel(PIKACHU, Pikachu->positions.size() / 3 , program, vao_p, texture_p, M, GL_TRIANGLES);
+
+	// draw Pokeball
+	M = M_base;
+	M = glm::translate(M, glm::vec3(0, 1, 0));
+	DrawModel(POKEBALL, Pokeball.size(), toon_program, vao_b, texture_b, M, GL_TRIANGLE_STRIP);
 }
