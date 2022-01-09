@@ -95,6 +95,8 @@ float eevee_height = 0.0f, eevee_speed = 0.0f;
 bool pikachu_glow = false;
 float pikachu_angle = 0.0f;
 bool expand = false;
+float pokeball_h_angle = 0.0f;
+float pokeball_v_angle = 0.0f;
 
 float gravity = -0.01f;
 
@@ -115,6 +117,12 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'P':
 		updateAngle(pikachu_angle, 10.0f, "pikachu");
+		break;
+	case 'b':
+		updateAngle(pokeball_h_angle, 10.0f, "pokeball h");
+		break;
+	case 'B':
+		updateAngle(pokeball_v_angle, 10.0f, "pokeball v");
 		break;
 
 	// jump
@@ -447,5 +455,7 @@ void demo() {
 	// draw Pokeball
 	M = M_base;
 	M = glm::translate(M, glm::vec3(0, 1, 0));
+	M = glm::rotate(M, glm::radians(pokeball_h_angle), glm::vec3(0, 1, 0));
+	M = glm::rotate(M, glm::radians(pokeball_v_angle), glm::vec3(0, 0, 1));
 	DrawModel(POKEBALL, Pokeball.size(), toon_program, vao_b, texture_b, M, GL_TRIANGLE_STRIP);
 }
