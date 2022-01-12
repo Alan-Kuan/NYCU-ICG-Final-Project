@@ -17,18 +17,15 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
-#include "Vertex.h"
 #include <vector>
+
+#include "Vertex.h"
+#include "ModelStatus.h"
+#include "global.h"
+#include "physics.h"
 
 using namespace std;
 
-enum ModelType {
-	PIKACHU,
-	EEVEE,
-	POKEBALL
-};
-
-void updateAngle(float& angle, float delta_angle, string angle_name);
 void keyboard(unsigned char key, int x, int y);
 void shaderInit();
 void generateVAO(vector<VertexAttribute>& data, GLuint* vao);
@@ -38,31 +35,35 @@ void textureInit();
 void display();
 void idle();
 void reshape(GLsizei w, GLsizei h);
-void DrawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack);
-void DrawModel(ModelType model_type, GLsizei vertex_num,GLuint program, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
-void LoadTexture(const char* tFileName, GLuint* texture_id);
+void drawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack);
+void drawModel(ModelStatus model_status, float expand_ratio, GLsizei vertex_num, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
+void loadTexture(const char* tFileName, GLuint* texture_id);
 void Sleep(int ms);
 glm::mat4 getV();
 glm::mat4 getP();
 void calculatePhysics();
 void demo();
 
-GLuint toon_program, expand_program;
-GLuint vao_e, vao_p, vao_b;
-GLuint texture_e, texture_p, texture_b;
-
-float windowSize[2] = { 600, 600 };
-glm::vec3 WorldLightPos = glm::vec3(0, 8, 5);
-glm::vec3 WorldCamPos = glm::vec3(0, 2, 7.5);
-
 // feeling free to adjust below value to fit your computer efficacy.
 #define MAX_FPS 120
 // timer for FPS control
 clock_t Start, End;
 
-vector<VertexAttribute> Pokeball;
+GLuint toon_program, expand_program;
+GLuint vao_e, vao_p, vao_b;
+GLuint texture_e, texture_p, texture_b;
+
+ModelStatus status_p(-1.0, 0.0, 0.0, "pikachu");
+ModelStatus status_e( 1.0, 0.0, 0.0, "eevee");
+ModelStatus status_b(-1.0, 1.5, 0.0, "pokeball");
+
+float windowSize[2] = { 600, 600 };
+glm::vec3 WorldLightPos = glm::vec3(0.0, 8.0, 5.0);
+glm::vec3 WorldCamPos 	= glm::vec3(0.0, 2.0, 7.5);
+
 Object* Pikachu = new Object("Pikachu.obj");
 Object* Eevee = new Object("Eevee.obj");
+vector<VertexAttribute> Pokeball;
 
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
@@ -70,7 +71,7 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutCreateWindow("hw4");
 
-	DrawSphere(Pokeball, 0.3, 60, 30);
+	drawSphere(Pokeball, 0.3, 60, 30);
 	glewInit();
 	shaderInit();
 	bindbufferInit();
@@ -83,25 +84,6 @@ int main(int argc, char** argv) {
 	glutMainLoop();
 	return 0;
 }
-
-// ### hint
-// comment or delete the "demo" function & feel free to chage the content of keyboard function & control parameter
-
-//control parameter
-bool inspect_mode = false;
-float scene_angle = 0.0f;
-float pikachu_height = 0.0f, pikachu_speed = 0.0f;
-float eevee_height = 0.0f, eevee_speed = 0.0f;
-bool pikachu_glow = false;
-float pikachu_angle = 0.0f;
-bool expand = false;
-float pokeball_h_angle = 0.0f;
-float pokeball_v_angle = 0.0f;
-float pokeball_y_speed = 0.0f;
-float pokeball_x_speed = 0.0f;
-float pokeball_x = 0.0f, pokeball_y = 0.0f;
-
-float gravity = -0.01f;
 
 void keyboard(unsigned char key, int x, int y) {
 	switch(key) {
@@ -119,53 +101,42 @@ void keyboard(unsigned char key, int x, int y) {
 		updateAngle(scene_angle, -10.0f, "scene");
 		break;
 	case 'P':
-		updateAngle(pikachu_angle, 10.0f, "pikachu");
+		updateAngle(status_p.angle_h, 10.0f, "pikachu_h");
 		break;
 	case 'b':
-		updateAngle(pokeball_h_angle, 10.0f, "pokeball h");
+		updateAngle(status_b.angle_h, 10.0f, "pokeball_h");
 		break;
 	case 'B':
-		updateAngle(pokeball_v_angle, 10.0f, "pokeball v");
+		updateAngle(status_b.angle_v, 10.0f, "pokeball_v");
 		break;
 
 	// jump
 	case 'p':
-		pikachu_speed = 0.1f;
+		status_p.speed = Vertex(0, 0.1f, 0);
 		break;
 	case 'e':
-		eevee_speed = 0.1f;
+		status_e.speed = Vertex(0, 0.1f, 0);
 		break;
 
 	// edge glow
 	case 'g':
-		pikachu_glow = !pikachu_glow;
+		status_p.glow = !status_p.glow;
 		break;
 
 	// expansion
 	case 'E':
-		expand = !expand;
+		status_p.expand = !status_p.expand;
+		status_e.expand = !status_e.expand;
 		break;
 
 	// projectile motion
 	case 'a':
-		pokeball_x_speed = -0.1f;
-		pokeball_y_speed = 0.1f;
+		status_b.speed = Vertex(-0.1f, 0.1f, 0);
 		break;
 	case 'd':
-		pokeball_x_speed = 0.1f;
-		pokeball_y_speed = 0.1f;
+		status_b.speed = Vertex(0.1f, 0.1f, 0);
 		break;
 	}
-}
-
-void updateAngle(float& angle, float delta_angle, string prefix) {
-	angle += delta_angle;
-	if (angle >= 360.0f)
-		angle -= 360.0f;
-	else if (angle < 0.0f)
-		angle += 360.0f;
-	if (inspect_mode)
-		cout << prefix << " angle: " << angle << endl;
 }
 
 void shaderInit() {
@@ -244,9 +215,9 @@ void bindbufferInit() {
 
 void textureInit() {
 	glEnable(GL_TEXTURE_2D);
-	LoadTexture("Eevee.jpg", &texture_e);
-	LoadTexture("Pikachu.png", &texture_p);
-	LoadTexture("Pokeball.png", &texture_b);
+	loadTexture("Eevee.jpg", &texture_e);
+	loadTexture("Pikachu.png", &texture_p);
+	loadTexture("Pokeball.png", &texture_b);
 }
 
 void display() {
@@ -272,7 +243,7 @@ void reshape(GLsizei w, GLsizei h) {
 	windowSize[1] = h;
 }
 
-void LoadTexture(const char* tFileName, GLuint* texture_id) {
+void loadTexture(const char* tFileName, GLuint* texture_id) {
 	GLuint _texture;
 	static GLuint idx = 0;
 	*texture_id = idx;
@@ -304,7 +275,7 @@ void idle() {
 	glutPostRedisplay();
 }
 
-void DrawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack) {
+void drawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack) {
 	float theta, phi, xy_step = 360 / slice, z_step = 180 / stack;
 	Vertex vert;
 	float u, v;
@@ -354,8 +325,18 @@ void DrawSphere(vector<VertexAttribute>& ball, float radius, float slice, float 
 	}
 }
 
-void DrawModel(ModelType model_type, GLsizei vertex_num, GLuint program, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
-	static GLuint _location;
+void drawModel(ModelStatus status, float expand_ratio, GLsizei vertex_num, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
+	GLuint _location, program;
+
+	if (status.expand) {
+		program = expand_program;
+		glUseProgram(program);
+		GLuint location = glGetUniformLocation(program, "ratio");
+		glUniform1f(location, expand_ratio);
+		glUseProgram(0);
+	} else {
+		program = toon_program;
+	}
 
 	glUseProgram(program);
 
@@ -380,7 +361,7 @@ void DrawModel(ModelType model_type, GLsizei vertex_num, GLuint program, GLuint 
 	glUniform3f(_location, WorldCamPos.x, WorldCamPos.y, WorldCamPos.z);
 
 	_location = glGetUniformLocation(program, "edge_glow");
-	glUniform1i(_location, model_type == PIKACHU && pikachu_glow);
+	glUniform1i(_location, status.glow);
 
 	glBindVertexArray(vao);
 	glDrawArrays(DrawingMode, 0, vertex_num);
@@ -407,36 +388,11 @@ glm::mat4 getP() {
 	return glm::perspective(glm::radians(fov), aspect, nearDistance, farDistance);
 }
 
-void applyGravity(float& height, float& speed, string prefix) {
-	if (speed != 0.0f) {
-		height += speed;
-		speed += gravity;
-		if (height <= 1.0e-3f) {
-			height = 0.0f;
-			speed = 0.0f;
-		}
-		if (inspect_mode) {
-			cout << prefix << " height: " << height << endl;
-			cout << prefix << " speed: " << speed << endl;
-		}
-	}
-}
-
-void applyHorizontalSpeed(float& x, const float y, float& speed, string prefix) {
-	if (speed != 0.0f) {
-		x += speed;
-		if (y <= 1.03e-3f)
-			speed = 0.0f;
-		if (inspect_mode)
-			cout << prefix << " speed: " << speed << endl;
-	}
-}
-
 void calculatePhysics() {
-	applyGravity(pikachu_height, pikachu_speed, "pikachu");
-	applyGravity(eevee_height, eevee_speed, "eevee");
-	applyGravity(pokeball_y, pokeball_y_speed, "pokeball y");
-	applyHorizontalSpeed(pokeball_x, pokeball_y, pokeball_x_speed, "pokeball x");
+	applyGravity(status_p);
+	applyGravity(status_e);
+	applyGravity(status_b);
+	restrictY(status_b, 1.5);
 }
 
 // ### hint
@@ -444,43 +400,37 @@ void calculatePhysics() {
 // You can just focus on one of effect(specifically reading expand.geom & knowing how it works ) to write your shader and create the effect you want to be displaied on video. 
 // Reminding again : Eevee model & Umbreon model are composed of different polygon . (Don't forget Pikachu which is also provided in this homework. you can ues it.)
 void demo() {
-	GLuint program = expand ? expand_program : toon_program;
+	Vertex _pos;
+	glm::mat4 M_base(1.0f), M;
 
-	glm::mat4 M_base(1.0f);
 	M_base = glm::rotate(M_base, glm::radians(scene_angle), glm::vec3(0, 1, 0));
 
-	// draw Eevee
-	glm::mat4 M = M_base;
-	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
-	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
-	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
-	M = glm::translate(M, glm::vec3(0, -15, -eevee_height * 20));
-	if (expand) {
-		glUseProgram(program);
-		GLuint location = glGetUniformLocation(program, "ratio");
-		glUniform1f(location, 2.0f);
-		glUseProgram(0);
-	}
-	DrawModel(EEVEE, Eevee->positions.size() / 3 , program, vao_e, texture_e, M, GL_TRIANGLES);
-
 	// draw Pikachu
+	_pos = status_p.position;
 	M = M_base;
 	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 1, 0));
-	M = glm::translate(M, glm::vec3(0, -0.05 + pikachu_height, -1));
-	M = glm::rotate(M, glm::radians(pikachu_angle), glm::vec3(0, 1, 0));
-	if (expand) {
-		glUseProgram(program);
-		GLuint location = glGetUniformLocation(program, "ratio");
-		glUniform1f(location, 0.1f);
-		glUseProgram(0);
-	}
-	DrawModel(PIKACHU, Pikachu->positions.size() / 3 , program, vao_p, texture_p, M, GL_TRIANGLES);
+	M = glm::translate(M, glm::vec3(-1 * _pos.z, _pos.y, _pos.x));
+	M = glm::rotate(M, glm::radians(status_p.angle_h), glm::vec3(0, 1, 0));
+	M = glm::rotate(M, glm::radians(status_p.angle_v), glm::vec3(-1, 0, 0));
+	drawModel(status_p, 0.1f, Pikachu->positions.size() / 3 , vao_p, texture_p, M, GL_TRIANGLES);
+
+	// draw Eevee
+	_pos = status_e.position;
+	M = M_base;
+	M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
+	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, 0, 1));
+	M = glm::rotate(M, glm::radians(90.0f), glm::vec3(0, -1, 0));
+	M = glm::translate(M, glm::vec3(20 * _pos.z, -20 * _pos.x, -20 * _pos.y));
+	M = glm::rotate(M, glm::radians(status_e.angle_h), glm::vec3(0, 0, -1));
+	M = glm::rotate(M, glm::radians(status_e.angle_v), glm::vec3(1, 0, 0));
+	drawModel(status_e, 2.0f, Eevee->positions.size() / 3 , vao_e, texture_e, M, GL_TRIANGLES);
 
 	// draw Pokeball
+	_pos = status_b.position;
 	M = M_base;
-	M = glm::translate(M, glm::vec3(-1 + pokeball_x, 1.5 + pokeball_y, 0));
-	M = glm::rotate(M, glm::radians(pokeball_h_angle), glm::vec3(0, 1, 0));
-	M = glm::rotate(M, glm::radians(pokeball_v_angle), glm::vec3(0, 0, 1));
-	DrawModel(POKEBALL, Pokeball.size(), toon_program, vao_b, texture_b, M, GL_TRIANGLE_STRIP);
+	M = glm::translate(M, glm::vec3(_pos.x, _pos.y, _pos.z));
+	M = glm::rotate(M, glm::radians(status_b.angle_h), glm::vec3(0, 1, 0));
+	M = glm::rotate(M, glm::radians(status_b.angle_v), glm::vec3(0, 0, 1));
+	drawModel(status_b, 0, Pokeball.size(), vao_b, texture_b, M, GL_TRIANGLE_STRIP);
 }

@@ -36,5 +36,11 @@
     <ClCompile Include="stb_image.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="global.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="physics.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

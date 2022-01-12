@@ -155,8 +155,10 @@
     <None Include="dll\Shaders\model.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="global.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="physics.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
