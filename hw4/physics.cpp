@@ -22,7 +22,7 @@ void applyGravity(ModelStatus& st) {
 }
 
 void restrictY(ModelStatus& st, float y) {
-	if (st.position.y <= y + 1.0e-3f) {
+	if (st.position.y <= y + 1.0e-3f && st.position.y != y) {
 		st.position.y = y;
 		st.speed = Vertex(0, 0, 0);
 		inspect(st);
