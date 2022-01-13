@@ -39,6 +39,7 @@ void calculatePhysics(ModelStatus& status_p, ModelStatus& status_e, ModelStatus&
     updateWithSpeed(status_b.angle_h, status_b.ang_speed_h);
     updateWithSpeed(status_b.angle_v, status_b.ang_speed_v);
     updateWithSpeed(status_p.angle_h, status_p.ang_speed_h);
+    updateWithSpeed(status_e.angle_h, status_e.ang_speed_h);
 }
 
 void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status_b) {
@@ -129,6 +130,22 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
     case 460:
         status_b.ang_speed_h = 0.0f;
         status_b.ang_speed_v = 0.0f;
+        break;
+
+    // Eevee turn around
+    case 500:
+        status_e.speed = Vertex(0, 0.03f, 0);
+        status_e.ang_speed_h = -7.45f;
+        break;
+    case 525:
+        status_e.ang_speed_h = 0.0f;
+        break;
+    case 580:
+        status_e.speed = Vertex(0, 0.03f, 0);
+        status_e.ang_speed_h = -7.45f;
+        break;
+    case 605:
+        status_e.ang_speed_h = 0.0f;
         break;
 
     }
