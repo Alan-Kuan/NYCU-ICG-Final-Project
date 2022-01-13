@@ -34,7 +34,7 @@ void calculatePhysics(ModelStatus& status_p, ModelStatus& status_e, ModelStatus&
 	applyGravity(status_b);
 	restrictY(status_b, PB_INIT_Y);
 
-    rotateWithSpeed(scene_angle, scene_speed);
+    rotateWithSpeed(scene_angle, scene_ang_speed);
     rotateWithSpeed(status_b.angle_h, status_b.ang_speed_h);
     rotateWithSpeed(status_b.angle_v, status_b.ang_speed_v);
     rotateWithSpeed(status_p.angle_h, status_p.ang_speed_h);
@@ -78,10 +78,10 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
 
     // scene rotation
     case 159:
-        scene_speed = 0.6f;
+        scene_ang_speed = 0.6f;
         break;
     case 258:
-        scene_speed = 0.0f;
+        scene_ang_speed = 0.0f;
         break;
 
     // iron tail
