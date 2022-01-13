@@ -10,6 +10,7 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
 void jump(ModelStatus& status);
 void toggleGlow(ModelStatus& status);
 void toggleExpand(ModelStatus& status);
+void toggleEmitRay(ModelStatus& status);
 void ball2pikachu(ModelStatus& status);
 void ball2eevee(ModelStatus& status);
 

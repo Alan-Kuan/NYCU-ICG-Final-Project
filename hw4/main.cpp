@@ -52,7 +52,7 @@ float windowSize[2] = { 600, 600 };
 glm::vec3 WorldLightPos = glm::vec3(0.0, 8.0, 5.0);
 glm::vec3 WorldCamPos 	= glm::vec3(0.0, 2.0, 7.5);
 
-GLuint toon_program, expand_program;
+GLuint toon_program, expand_program, ray_program;
 GLuint vao_e, vao_p, vao_b;
 GLuint texture_e, texture_p, texture_b;
 
@@ -149,6 +149,11 @@ void keyboard(unsigned char key, int x, int y) {
 		toggleExpand(status_e);
 		break;
 
+	// emit ray
+	case 'R':
+		toggleEmitRay(status_b);
+		break;
+
 	// projectile motion
 	case 'a':
 		ball2pikachu(status_b);
@@ -174,6 +179,11 @@ void shaderInit() {
 	_geom = createShader("Shaders/expand.geom", "geometry");
 	_frag = createShader("Shaders/toon.frag", "fragment");
 	expand_program = createProgram(_vert, _geom, _frag);
+
+	_vert = createShader("Shaders/expand.vert", "vertex");
+	_geom = createShader("Shaders/ray.geom", "geometry");
+	_frag = createShader("Shaders/ray.frag", "fragment");
+	ray_program = createProgram(_vert, _geom, _frag);
 }
 
 void generateVAO(vector<VertexAttribute>& data, GLuint* vao) {
@@ -354,6 +364,12 @@ void drawModel(ModelStatus status, float expand_ratio, GLsizei vertex_num, GLuin
 		GLuint location = glGetUniformLocation(program, "ratio");
 		glUniform1f(location, expand_ratio);
 		glUseProgram(0);
+	} else if (status.emit_ray) {
+		program = ray_program;
+		glUseProgram(program);
+		GLuint location = glGetUniformLocation(program, "WorldTailPos");
+		glUniform3f(location, 0, 0, 0);
+		glUseProgram(0);
 	} else {
 		program = toon_program;
 	}
@@ -377,11 +393,13 @@ void drawModel(ModelStatus status, float expand_ratio, GLsizei vertex_num, GLuin
 	_location = glGetUniformLocation(program, "WorldLightPos");
 	glUniform3f(_location, WorldLightPos.x, WorldLightPos.y, WorldLightPos.z);
 
-	_location = glGetUniformLocation(program, "WorldCamPos");
-	glUniform3f(_location, WorldCamPos.x, WorldCamPos.y, WorldCamPos.z);
+	if (program != ray_program) {
+		_location = glGetUniformLocation(program, "WorldCamPos");
+		glUniform3f(_location, WorldCamPos.x, WorldCamPos.y, WorldCamPos.z);
 
-	_location = glGetUniformLocation(program, "edge_glow");
-	glUniform1i(_location, status.glow);
+		_location = glGetUniformLocation(program, "edge_glow");
+		glUniform1i(_location, status.glow);
+	}
 
 	glBindVertexArray(vao);
 	glDrawArrays(DrawingMode, 0, vertex_num);

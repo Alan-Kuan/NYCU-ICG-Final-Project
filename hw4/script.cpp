@@ -20,6 +20,10 @@ void toggleExpand(ModelStatus& status) {
     status.expand = !status.expand;
 }
 
+void toggleEmitRay(ModelStatus& status) {
+    status.emit_ray = !status.emit_ray;
+}
+
 void ball2pikachu(ModelStatus& status) {
     status.speed = Vertex(-0.03f, 0.05f, 0);
 }
@@ -100,6 +104,7 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
         break;
     case 350:
         ball2eevee(status_b);
+        toggleEmitRay(status_b);
         scene_speed = 0.0f;
         status_p.ang_speed_h = 0.5f;
         reduceGravity();
@@ -121,6 +126,7 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
 
     // Eevee fail to catch
     case 400:
+        toggleEmitRay(status_b);
         jump(status_e);
         break;
     case 409:

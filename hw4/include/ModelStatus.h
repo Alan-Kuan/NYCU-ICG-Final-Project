@@ -12,6 +12,7 @@ struct ModelStatus {
         this->ang_speed_h = this->ang_speed_v = 0;
         this->glow = false;
         this->expand = false;
+        this->emit_ray = false;
         this->name = "";
     }
     ModelStatus(float x, float y, float z, std::string name) {
@@ -21,6 +22,7 @@ struct ModelStatus {
         this->ang_speed_h = this->ang_speed_v = 0;
         this->glow = false;
         this->expand = false;
+        this->emit_ray = false;
         this->name = name;
     }
 
@@ -28,7 +30,7 @@ struct ModelStatus {
     Vertex speed;
     float angle_h, angle_v;
     float ang_speed_h, ang_speed_v;
-    bool glow, expand;
+    bool glow, expand, emit_ray;
     std::string name;
 };
 
