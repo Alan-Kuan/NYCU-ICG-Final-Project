@@ -104,6 +104,14 @@ void keyboard(unsigned char key, int x, int y) {
 		cout << "Replayed <<" << endl;
 		break;
 
+	// scene dist
+	case 'f':
+		scene_dist -= 1.0f;
+		break;
+	case 'F':
+		scene_dist += 1.0f;
+		break;
+
 	// rotation
 	case 's':
 		updateAngle(scene_angle, 10.0f, "scene");
@@ -403,6 +411,7 @@ void drawAllModels() {
 	Vertex _pos;
 	glm::mat4 M_base(1.0f), M;
 
+	M_base = glm::translate(M_base, glm::vec3(0, 0, -scene_dist));
 	M_base = glm::rotate(M_base, glm::radians(scene_angle), glm::vec3(0, 1, 0));
 
 	// draw Pikachu
