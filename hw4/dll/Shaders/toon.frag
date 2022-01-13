@@ -30,5 +30,5 @@ void main() {
 
     float edge_level = dot(N, V);
     if (edge_glow && 0.0 <= edge_level && edge_level <= 0.4)
-        color += vec4(1.0, 1.0, 1.0, 1.0) * pow(0.9, 5);
+        color += vec4(0.85, 0.85, 0.85, 0.0);
 } 

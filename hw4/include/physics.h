@@ -7,6 +7,8 @@
 #include "global.h"
 #include "ModelStatus.h"
 
+void resetGravity(void);
+void reduceGravity(void);
 void applyGravity(ModelStatus& st);
 void restrictY(ModelStatus& st, float y);
 

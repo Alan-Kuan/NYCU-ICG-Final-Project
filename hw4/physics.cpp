@@ -9,6 +9,18 @@ inline void inspect(ModelStatus& st) {
 	}
 }
 
+void resetGravity(void) {
+	gravity.x = 0;
+	gravity.y = -0.0025f;
+	gravity.z = 0;
+}
+
+void reduceGravity(void) {
+	gravity.x = 0;
+	gravity.y = -0.0005f;
+	gravity.z = 0;
+}
+
 void applyGravity(ModelStatus& st) {
 	if (st.speed != Vertex(0, 0, 0)) {
 		st.position += st.speed;
