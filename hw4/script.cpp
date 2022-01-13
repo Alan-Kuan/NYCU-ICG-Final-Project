@@ -148,6 +148,22 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
         status_e.ang_speed_h = 0.0f;
         break;
 
+    // Eevee laugh & Pikachu be angry
+    case 680:
+        toggleExpand(status_e);
+        break;
+    case 730:
+        scene_ang_speed = -2.0f;
+        scene_speed = -0.035f;
+        break;
+    case 790:
+        scene_speed = 0.0f;
+        scene_ang_speed = 0.0f;
+        break;
+    case 800:
+        toggleExpand(status_p);
+        break;
+
     }
 
     if (playing) {
