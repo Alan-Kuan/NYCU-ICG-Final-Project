@@ -12,6 +12,6 @@ void reduceGravity(void);
 void applyGravity(ModelStatus& st);
 void restrictY(ModelStatus& st, float y);
 
-void rotateWithSpeed(float& angle, float speed);
+void updateWithSpeed(float& value, float speed);
 
 #endif

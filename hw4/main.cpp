@@ -99,6 +99,7 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'r':
 		playing = true;
 		frame_num = 0;
+		scene_dist = 0.0f;
 		scene_angle = 0.0f;
 		statusInit(status_p, status_e, status_b);
 		cout << "Replayed <<" << endl;

@@ -2,6 +2,7 @@
 
 bool inspect_mode = false;
 float scene_dist = 0.0f;
+float scene_speed = 0.0f;
 float scene_angle = 0.0f;
 float scene_ang_speed = 0.0f;
 unsigned int frame_num = 0;

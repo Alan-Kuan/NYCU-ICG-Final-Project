@@ -6,6 +6,7 @@
 
 extern bool inspect_mode;
 extern float scene_dist;
+extern float scene_speed;
 extern float scene_angle;
 extern float scene_ang_speed;
 extern unsigned int frame_num;

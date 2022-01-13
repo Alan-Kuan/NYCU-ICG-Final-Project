@@ -1,11 +1,11 @@
 #include "script.h"
 
-#define PB_INIT_Y 0.7
+static float y_limit_b = 0.7;
 
 void statusInit(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status_b) {
-    status_p = ModelStatus(-1.0, 0.0,       0.0, "pikachu");
-    status_e = ModelStatus( 1.0, 0.0,       0.0, "eevee");
-    status_b = ModelStatus(-0.5, PB_INIT_Y, 0.0, "pokeball");
+    status_p = ModelStatus(-1.0, 0.0, 0.0, "pikachu");
+    status_e = ModelStatus( 1.0, 0.0, 0.0, "eevee");
+    status_b = ModelStatus(-0.5, 0.7, 0.0, "pokeball");
 }
 
 void jump(ModelStatus& status) {
@@ -32,17 +32,20 @@ void calculatePhysics(ModelStatus& status_p, ModelStatus& status_e, ModelStatus&
 	applyGravity(status_p);
 	applyGravity(status_e);
 	applyGravity(status_b);
-	restrictY(status_b, PB_INIT_Y);
+	restrictY(status_b, y_limit_b);
 
-    rotateWithSpeed(scene_angle, scene_ang_speed);
-    rotateWithSpeed(status_b.angle_h, status_b.ang_speed_h);
-    rotateWithSpeed(status_b.angle_v, status_b.ang_speed_v);
-    rotateWithSpeed(status_p.angle_h, status_p.ang_speed_h);
+    updateWithSpeed(scene_dist, scene_speed);
+    updateWithSpeed(scene_angle, scene_ang_speed);
+    updateWithSpeed(status_b.angle_h, status_b.ang_speed_h);
+    updateWithSpeed(status_b.angle_v, status_b.ang_speed_v);
+    updateWithSpeed(status_p.angle_h, status_p.ang_speed_h);
 }
 
 void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status_b) {
     switch (frame_num) {
+    // init
     case 0:
+        y_limit_b = 0.7f;
         resetGravity();
         break;
 
@@ -89,12 +92,14 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
         toggleGlow(status_p);
         jump(status_p);
         status_p.ang_speed_h = 3.5f;
+        scene_speed = -0.05f;
         break;
     case 320:
         status_p.ang_speed_h = 2.5f;
         break;
     case 350:
-        // TODO: hit the ball
+        ball2eevee(status_b);
+        scene_speed = 0.0f;
         status_p.ang_speed_h = 0.5f;
         reduceGravity();
         break;
@@ -111,6 +116,19 @@ void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status
         break;
     case 390:
         status_p.ang_speed_h = 0.0f;
+        break;
+
+    // Eevee fail to catch
+    case 400:
+        jump(status_e);
+        break;
+    case 409:
+        ball2eevee(status_b);
+        y_limit_b = 0.0f;
+        break;
+    case 460:
+        status_b.ang_speed_h = 0.0f;
+        status_b.ang_speed_v = 0.0f;
         break;
 
     }

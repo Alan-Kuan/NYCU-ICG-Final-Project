@@ -41,7 +41,7 @@ void restrictY(ModelStatus& st, float y) {
 	}
 }
 
-void rotateWithSpeed(float& angle, float speed) {
+void updateWithSpeed(float& value, float speed) {
 	if (speed != 0.0f)
-		angle += speed;
+		value += speed;
 }
