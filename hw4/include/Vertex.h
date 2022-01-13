@@ -18,19 +18,7 @@ public:
 		this->y = y;
 		this->z = z;
 	}
-	// copy constructor
-	Vertex(Vertex const& obj) {
-		this->x = obj.x;
-		this->y = obj.y;
-		this->z = obj.z;
-	}
-
-	Vertex& operator = (Vertex const& obj) {
-		this->x = obj.x;
-		this->y = obj.y;
-		this->z = obj.z;
-		return *this;
-	}
+	
 	Vertex operator + (Vertex const& obj) {
 		Vertex temp;
 		temp.x = this->x + obj.x;

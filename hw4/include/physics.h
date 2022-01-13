@@ -10,4 +10,6 @@
 void applyGravity(ModelStatus& st);
 void restrictY(ModelStatus& st, float y);
 
+void rotateWithSpeed(float& angle, float speed);
+
 #endif

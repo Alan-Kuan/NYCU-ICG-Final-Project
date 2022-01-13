@@ -1,6 +1,6 @@
 #include "physics.h"
 
-static Vertex gravity(0, -0.01f, 0);
+static Vertex gravity(0, -0.0025f, 0);
 
 inline void inspect(ModelStatus& st) {
 	if (inspect_mode) {
@@ -27,4 +27,9 @@ void restrictY(ModelStatus& st, float y) {
 		st.speed = Vertex(0, 0, 0);
 		inspect(st);
 	}
+}
+
+void rotateWithSpeed(float& angle, float speed) {
+	if (speed != 0.0f)
+		angle += speed;
 }

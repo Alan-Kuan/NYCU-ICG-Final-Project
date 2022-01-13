@@ -2,6 +2,9 @@
 
 bool inspect_mode = false;
 float scene_angle = 0.0f;
+float scene_speed = 0.0f;
+unsigned int frame_num = 0;
+bool playing = false;
 
 void updateAngle(float& angle, float delta_angle, const std::string& prefix) {
 	angle += delta_angle;

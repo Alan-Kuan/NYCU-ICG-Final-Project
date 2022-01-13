@@ -22,7 +22,7 @@
 #include "Vertex.h"
 #include "ModelStatus.h"
 #include "global.h"
-#include "physics.h"
+#include "script.h"
 
 using namespace std;
 
@@ -35,35 +35,32 @@ void textureInit();
 void display();
 void idle();
 void reshape(GLsizei w, GLsizei h);
+void loadTexture(const char* tFileName, GLuint* texture_id);
 void drawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack);
 void drawModel(ModelStatus model_status, float expand_ratio, GLsizei vertex_num, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
-void loadTexture(const char* tFileName, GLuint* texture_id);
+void drawAllModels();
 void Sleep(int ms);
 glm::mat4 getV();
 glm::mat4 getP();
-void calculatePhysics();
-void demo();
 
 // feeling free to adjust below value to fit your computer efficacy.
 #define MAX_FPS 120
 // timer for FPS control
 clock_t Start, End;
 
-GLuint toon_program, expand_program;
-GLuint vao_e, vao_p, vao_b;
-GLuint texture_e, texture_p, texture_b;
-
-ModelStatus status_p(-1.0, 0.0, 0.0, "pikachu");
-ModelStatus status_e( 1.0, 0.0, 0.0, "eevee");
-ModelStatus status_b(-1.0, 1.5, 0.0, "pokeball");
-
 float windowSize[2] = { 600, 600 };
 glm::vec3 WorldLightPos = glm::vec3(0.0, 8.0, 5.0);
 glm::vec3 WorldCamPos 	= glm::vec3(0.0, 2.0, 7.5);
 
+GLuint toon_program, expand_program;
+GLuint vao_e, vao_p, vao_b;
+GLuint texture_e, texture_p, texture_b;
+
 Object* Pikachu = new Object("Pikachu.obj");
 Object* Eevee = new Object("Eevee.obj");
 vector<VertexAttribute> Pokeball;
+
+ModelStatus status_p, status_e, status_b;
 
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
@@ -71,11 +68,12 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutCreateWindow("hw4");
 
-	drawSphere(Pokeball, 0.3, 60, 30);
+	drawSphere(Pokeball, 0.15, 60, 30);
 	glewInit();
 	shaderInit();
 	bindbufferInit();
 	textureInit();
+	statusInit(status_p, status_e, status_b);
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
@@ -91,6 +89,19 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'i':
 		inspect_mode = !inspect_mode;
 		cout << "Inspect Mode: " << (inspect_mode ? "On" : "Off") << endl;
+		break;
+
+	// player
+	case ' ':
+		playing = !playing;
+		cout << (playing ? "Playing |>" : "Paused ||") << endl;
+		break;
+	case 'r':
+		playing = true;
+		frame_num = 0;
+		scene_angle = 0.0f;
+		statusInit(status_p, status_e, status_b);
+		cout << "Replayed <<" << endl;
 		break;
 
 	// rotation
@@ -112,29 +123,29 @@ void keyboard(unsigned char key, int x, int y) {
 
 	// jump
 	case 'p':
-		status_p.speed = Vertex(0, 0.1f, 0);
+		jump(status_p);
 		break;
 	case 'e':
-		status_e.speed = Vertex(0, 0.1f, 0);
+		jump(status_e);
 		break;
 
 	// edge glow
 	case 'g':
-		status_p.glow = !status_p.glow;
+		toggleGlow(status_p);
 		break;
 
 	// expansion
 	case 'E':
-		status_p.expand = !status_p.expand;
-		status_e.expand = !status_e.expand;
+		toggleExpand(status_p);
+		toggleExpand(status_e);
 		break;
 
 	// projectile motion
 	case 'a':
-		status_b.speed = Vertex(-0.1f, 0.1f, 0);
+		ball2pikachu(status_b);
 		break;
 	case 'd':
-		status_b.speed = Vertex(0.1f, 0.1f, 0);
+		ball2eevee(status_b);
 		break;
 	}
 }
@@ -232,8 +243,8 @@ void display() {
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	calculatePhysics();
-	demo();
+	runScript(status_p, status_e, status_b);
+	drawAllModels();
 	End = clock();
 	glutSwapBuffers();
 }
@@ -388,18 +399,7 @@ glm::mat4 getP() {
 	return glm::perspective(glm::radians(fov), aspect, nearDistance, farDistance);
 }
 
-void calculatePhysics() {
-	applyGravity(status_p);
-	applyGravity(status_e);
-	applyGravity(status_b);
-	restrictY(status_b, 1.5);
-}
-
-// ### hint
-// Don't be afraid of this hw. It looks like a lot of code because I need to make sure tha all effect (3 kind of shader) can show with two model in different drawing way .
-// You can just focus on one of effect(specifically reading expand.geom & knowing how it works ) to write your shader and create the effect you want to be displaied on video. 
-// Reminding again : Eevee model & Umbreon model are composed of different polygon . (Don't forget Pikachu which is also provided in this homework. you can ues it.)
-void demo() {
+void drawAllModels() {
 	Vertex _pos;
 	glm::mat4 M_base(1.0f), M;
 
@@ -429,6 +429,7 @@ void demo() {
 	// draw Pokeball
 	_pos = status_b.position;
 	M = M_base;
+	M = glm::scale(M, glm::vec3(2, 2, 2));
 	M = glm::translate(M, glm::vec3(_pos.x, _pos.y, _pos.z));
 	M = glm::rotate(M, glm::radians(status_b.angle_h), glm::vec3(0, 1, 0));
 	M = glm::rotate(M, glm::radians(status_b.angle_v), glm::vec3(0, 0, 1));

@@ -42,5 +42,8 @@
     <ClCompile Include="physics.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="script.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
