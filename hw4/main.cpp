@@ -370,7 +370,8 @@ void drawModel(ModelStatus status, GLsizei vertex_num, GLuint vao, GLuint textur
 		program = ray_program;
 		glUseProgram(program);
 		GLuint location = glGetUniformLocation(program, "WorldTailPos");
-		glUniform3f(location, 0, 0, 0);
+		Vertex& pos = status_e.position;
+		glUniform3f(location, pos.x, pos.y, pos.z);
 		glUseProgram(0);
 	} else {
 		program = toon_program;
