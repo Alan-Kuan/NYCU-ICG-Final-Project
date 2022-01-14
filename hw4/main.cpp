@@ -167,10 +167,6 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 void shaderInit() {
-	// ### hint
-	// create your shader in here
-	// below two shader "expand3" & "expand4" only differ in "input type of primitive" of geometry shader (one for triangle , one for quad)
-	// what kind of primitive is sent to geometry shader is depend on what model you call in "glDrawArrays" function
 	GLuint _vert, _geom, _frag;
 
 	_vert = createShader("Shaders/toon.vert", "vertex");
@@ -234,11 +230,6 @@ void bufferModel(Object* model, GLuint* vao) {
 	generateVAO(data, vao);
 }
 
-// ### hint
-// load any object model you want with texture below
-// be careful of some obect model may need ".mtl file" which file name shouldn't be changed and the size of model & model's default orientaion may be different.
-// it's not all of the model compoesd by triangle. you can know how to draw the model by drop the object file in to visual studio & you can see what kind of polygon makes up the model
-// this demo using the two kind of model. one is "Eevee" composed of triangle another one is "Umbreon" composed of quads. (by the way Pikachu is also composed of triangle)
 void bindbufferInit() {
 	bufferModel(Eevee, &vao_e);
 	bufferModel(Pikachu, &vao_p);
