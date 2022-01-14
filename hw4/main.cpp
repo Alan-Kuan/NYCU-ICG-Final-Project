@@ -37,7 +37,7 @@ void idle();
 void reshape(GLsizei w, GLsizei h);
 void loadTexture(const char* tFileName, GLuint* texture_id);
 void drawSphere(vector<VertexAttribute>& ball, float radius, float slice, float stack);
-void drawModel(ModelStatus model_status, float expand_ratio, GLsizei vertex_num, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
+void drawModel(ModelStatus model_status, GLsizei vertex_num, GLuint vao, GLuint texture_, glm::mat4 &M, GLenum DrawingMode);
 void drawAllModels();
 void Sleep(int ms);
 glm::mat4 getV();
@@ -100,7 +100,9 @@ void keyboard(unsigned char key, int x, int y) {
 		playing = true;
 		frame_num = 0;
 		scene_dist = 0.0f;
+		scene_speed = 0.0f;
 		scene_angle = 0.0f;
+		scene_ang_speed = 0.0f;
 		statusInit(status_p, status_e, status_b);
 		cout << "Replayed <<" << endl;
 		break;
@@ -355,14 +357,14 @@ void drawSphere(vector<VertexAttribute>& ball, float radius, float slice, float 
 	}
 }
 
-void drawModel(ModelStatus status, float expand_ratio, GLsizei vertex_num, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
+void drawModel(ModelStatus status, GLsizei vertex_num, GLuint vao, GLuint texture_ID, glm::mat4& M, GLenum DrawingMode) {
 	GLuint _location, program;
 
 	if (status.expand) {
 		program = expand_program;
 		glUseProgram(program);
 		GLuint location = glGetUniformLocation(program, "ratio");
-		glUniform1f(location, expand_ratio);
+		glUniform1f(location, status.expand_ratio);
 		glUseProgram(0);
 	} else if (status.emit_ray) {
 		program = ray_program;
@@ -441,7 +443,7 @@ void drawAllModels() {
 	M = glm::translate(M, glm::vec3(-1 * _pos.z, _pos.y, _pos.x));
 	M = glm::rotate(M, glm::radians(status_p.angle_h), glm::vec3(0, 1, 0));
 	M = glm::rotate(M, glm::radians(status_p.angle_v), glm::vec3(-1, 0, 0));
-	drawModel(status_p, 0.1f, Pikachu->positions.size() / 3 , vao_p, texture_p, M, GL_TRIANGLES);
+	drawModel(status_p, Pikachu->positions.size() / 3 , vao_p, texture_p, M, GL_TRIANGLES);
 
 	// draw Eevee
 	_pos = status_e.position;
@@ -452,7 +454,7 @@ void drawAllModels() {
 	M = glm::translate(M, glm::vec3(20 * _pos.z, -20 * _pos.x, -20 * _pos.y));
 	M = glm::rotate(M, glm::radians(status_e.angle_h), glm::vec3(0, 0, -1));
 	M = glm::rotate(M, glm::radians(status_e.angle_v), glm::vec3(1, 0, 0));
-	drawModel(status_e, 2.0f, Eevee->positions.size() / 3 , vao_e, texture_e, M, GL_TRIANGLES);
+	drawModel(status_e, Eevee->positions.size() / 3 , vao_e, texture_e, M, GL_TRIANGLES);
 
 	// draw Pokeball
 	_pos = status_b.position;
@@ -461,5 +463,5 @@ void drawAllModels() {
 	M = glm::translate(M, glm::vec3(_pos.x, _pos.y, _pos.z));
 	M = glm::rotate(M, glm::radians(status_b.angle_h), glm::vec3(0, 1, 0));
 	M = glm::rotate(M, glm::radians(status_b.angle_v), glm::vec3(0, 0, 1));
-	drawModel(status_b, 0, Pokeball.size(), vao_b, texture_b, M, GL_TRIANGLE_STRIP);
+	drawModel(status_b, Pokeball.size(), vao_b, texture_b, M, GL_TRIANGLE_STRIP);
 }

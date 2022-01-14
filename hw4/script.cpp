@@ -3,9 +3,14 @@
 static float y_limit_b = 0.7;
 
 void statusInit(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status_b) {
+    resetGravity();
+    y_limit_b = 0.7f;
+
     status_p = ModelStatus(-1.0, 0.0, 0.0, "pikachu");
     status_e = ModelStatus( 1.0, 0.0, 0.0, "eevee");
     status_b = ModelStatus(-0.5, 0.7, 0.0, "pokeball");
+    status_p.expand_ratio = 0.1f;
+    status_e.expand_ratio = 2.0f;
 }
 
 void jump(ModelStatus& status) {
@@ -48,12 +53,6 @@ void calculatePhysics(ModelStatus& status_p, ModelStatus& status_e, ModelStatus&
 
 void runScript(ModelStatus& status_p, ModelStatus& status_e, ModelStatus& status_b) {
     switch (frame_num) {
-    // init
-    case 0:
-        y_limit_b = 0.7f;
-        resetGravity();
-        break;
-
     // passing ball
     case 1:
     case 101:

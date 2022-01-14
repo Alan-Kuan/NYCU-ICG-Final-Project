@@ -13,6 +13,7 @@ struct ModelStatus {
         this->glow = false;
         this->expand = false;
         this->emit_ray = false;
+        this->expand_ratio = 0;
         this->name = "";
     }
     ModelStatus(float x, float y, float z, std::string name) {
@@ -23,6 +24,7 @@ struct ModelStatus {
         this->glow = false;
         this->expand = false;
         this->emit_ray = false;
+        this->expand_ratio = 0;
         this->name = name;
     }
 
@@ -31,6 +33,7 @@ struct ModelStatus {
     float angle_h, angle_v;
     float ang_speed_h, ang_speed_v;
     bool glow, expand, emit_ray;
+    float expand_ratio;
     std::string name;
 };
 
