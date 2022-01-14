@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
 	textureInit();
 	statusInit(status_p, status_e, status_b);
 
+	cout << "Press space to play/pause. Press 'r' to replay." << endl;
+
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
